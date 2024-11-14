@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Damage and Severity Detection</title>
+    <style>
+        /* Reset some default styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f4f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: #333;
+        }
+
+        h1 {
+            color: #0077cc;
+            font-size: 1.8rem;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        form, .results-container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+
+        input[type="file"] {
+            display: block;
+            margin-bottom: 20px;
+            padding: 8px;
+            width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        button {
+            display: inline-block;
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 4px;
+            background-color: #0077cc;
+            color: #ffffff;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #005fa3;
+        }
+
+        hr {
+            margin: 20px 0;
+            border: none;
+            border-top: 1px solid #ddd;
+        }
+
+        #detected-results h2, #annotated-image h2 {
+            font-size: 1.4rem;
+            color: #0077cc;
+            margin-bottom: 10px;
+        }
+
+        #detected-results-text {
+            font-size: 0.9rem;
+            color: #555;
+            margin-top: 10px;
+        }
+
+        #annotated-image {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        #annotated-image img {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="results-container">
+        <h1>Upload an Image for Car Damage and Severity Detection</h1>
+
+        <!-- Image Upload Form -->
+        <form action="/upload/" method="post" enctype="multipart/form-data">
+            <label for="file">Select an image:</label>
+            <input type="file" name="file" id="file" required>
+            <button type="submit">Upload</button>
+        </form>
+
+        <hr>
+
+        <!-- Display Detected Results -->
+        <div id="detected-results">
+            <h2>Detected Results:</h2>
+            <p id="detected-results-text">No detection results.</p>
+        </div>
+
+        <!-- Display Annotated Image -->
+        <div id="annotated-image">
+            <h2>Annotated Image:</h2>
+            <img id="annotated-image-output" src="" alt="Annotated Image"/>
+        </div>
+    </div>
+
+    <script>
+        // Handle form submission
+        document.querySelector('form').onsubmit = async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+
+            const response = await fetch("/upload/", {
+                method: "POST",
+                body: formData,
+            });
+
+            const result = await response.json();
+
+            // Show the detected results
+            const detectedResultsText = document.getElementById("detected-results-text");
+            const detectedResults = result.detected_results;
+            let resultText = "";
+            for (const [className, predictions] of Object.entries(detectedResults)) {
+                resultText += `<strong>${className}:</strong><br>`;
+                predictions.forEach(prediction => {
+                    resultText += `- [${prediction.x}, ${prediction.y}, ${prediction.width}, ${prediction.height}]<br>`;
+                });
+            }
+            detectedResultsText.innerHTML = resultText || "The uploaded image is not a car or damage not detected.";
+
+            // Show the annotated image
+            const annotatedImageOutput = document.getElementById("annotated-image-output");
+            annotatedImageOutput.src = `data:image/png;base64,${result.annotated_image}`;
+        };
+    </script>
+</body> 
+</html>
